@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quiz: ordenador, ASCII y Von Neumann</title>
+<style>
+:root{--ink:#172033;--muted:#5b6475;--line:#dce2eb;--bg:#f3f6fb;--accent:#315fba;--good:#187747;--bad:#b42318}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Arial,Helvetica,sans-serif}
+main{width:min(850px,94%);margin:26px auto}header{background:#203d75;color:#fff;padding:25px;border-radius:16px}
+h1{margin:0 0 8px;font-size:clamp(1.5rem,4vw,2.1rem)}header p{margin:0;color:#e5edff}
+.card,.question,.results{background:#fff;border:1px solid var(--line);border-radius:13px;padding:17px;margin:14px 0}
+label.name{display:block;font-weight:bold;margin-bottom:7px}input[type=text]{width:100%;max-width:420px;padding:11px;border:1px solid #aeb8c8;border-radius:8px;font-size:1rem}
+.progress-wrap{height:8px;background:#e4e9f2;border-radius:99px;overflow:hidden;margin-top:15px}.progress{height:100%;width:0;background:#91b1ff}
+.number{font-size:.82rem;font-weight:bold;color:var(--accent);text-transform:uppercase;letter-spacing:.04em}
+.question h2{font-size:1.07rem;margin:4px 0 12px}.option{display:flex;gap:10px;border:1px solid var(--line);border-radius:9px;padding:10px 12px;margin:8px 0;cursor:pointer}
+.option:hover{background:#f5f8ff}.option input{margin-top:5px;accent-color:var(--accent)}.option:has(input:checked){background:#f0f5ff;border-color:var(--accent)}
+.feedback{display:none;margin-top:10px;padding:10px 12px;border-radius:8px}.feedback.show{display:block}.good{background:#e9f7ef;color:var(--good)}.bad{background:#fff0ef;color:var(--bad)}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}button{border:0;border-radius:9px;padding:12px 16px;font-weight:bold;font-size:1rem;cursor:pointer}.primary{background:var(--accent);color:#fff}.secondary{background:#e2e8f2;color:var(--ink)}button:disabled{opacity:.55;cursor:not-allowed}
+.results{display:none}.score{font-size:1.8rem;font-weight:bold}.small{color:var(--muted);font-size:.9rem}footer{text-align:center;color:var(--muted);font-size:.85rem;padding:10px 0 25px}
+@media print{body{background:#fff}main{width:100%;margin:0}.actions,.progress-wrap{display:none}}
+</style>
+</head>
+<body>
+<main>
+<header>
+<h1>💻 Quiz: ordenador, código ASCII y Von Neumann</h1>
+<p>12 preguntas para repasar. Elige una respuesta en cada pregunta y pulsa «Corregir».</p>
+<div class="progress-wrap"><div class="progress" id="progress"></div></div>
+</header>
+<section class="card">
+<label class="name" for="student">Nombre (opcional)</label>
+<input id="student" type="text" placeholder="Escribe tu nombre">
+<p class="small">La corrección se realiza en este navegador. Tus respuestas no se envían ni se guardan en Internet.</p>
+</section>
+<form id="quiz"><div id="questions"></div>
+<div class="actions"><button class="primary" type="submit" id="correct">Corregir respuestas</button><button class="secondary" type="button" id="reset">Volver a empezar</button></div>
+</form>
+<section class="results" id="results" aria-live="polite"><h2>Tu resultado</h2><div class="score" id="score"></div><p id="message"></p><p class="small" id="review"></p><button class="primary" type="button" id="retry">Intentarlo otra vez</button></section>
+<footer>Digitalización · 4.º ESO</footer>
+</main>
+<script>
+const questions=[
+{q:"¿Qué es un ordenador?",o:["Una máquina electrónica que recibe y procesa datos siguiendo instrucciones.","Una máquina que solo sirve para conectarse a Internet.","Un aparato que únicamente guarda fotografías."],a:0,e:"Un ordenador recibe datos, los procesa y puede mostrar o almacenar información."},
+{q:"¿Qué significa procesar datos?",o:["Apagar el ordenador.","Realizar operaciones con los datos siguiendo instrucciones.","Conectar el ordenador a la corriente."],a:1,e:"Procesar es trabajar con los datos para obtener un resultado."},
+{q:"¿Qué es un bit?",o:["Un conjunto de ocho letras.","Un tipo de pantalla.","La unidad mínima de información digital, que puede valer 0 o 1."],a:2,e:"Un bit puede tomar dos valores: 0 o 1."},
+{q:"¿Cuántos bits forman normalmente un byte?",o:["8 bits.","2 bits.","100 bits."],a:0,e:"Un byte está formado por ocho bits."},
+{q:"¿Para qué sirve el código ASCII?",o:["Para aumentar la velocidad de Internet.","Para asignar números a caracteres, como letras, números y signos.","Para reparar físicamente un ordenador."],a:1,e:"ASCII relaciona caracteres con valores numéricos que el ordenador puede representar."},
+{q:"En ASCII, la letra A mayúscula tiene el valor decimal 65. ¿Qué significa esto?",o:["Que la letra A ocupa siempre 65 bytes.","Que el ordenador reconoce las letras sin representarlas mediante números.","Que el código asignado a A es el número 65."],a:2,e:"ASCII asigna el valor decimal 65 a la A mayúscula; en binario es 01000001 si se expresa en 8 bits."},
+{q:"¿Cuál es la representación binaria de la letra A en ASCII usando 8 bits?",o:["01000001","00000001","11111111"],a:0,e:"El valor decimal 65 se representa como 01000001 en binario de 8 bits."},
+{q:"¿Por qué necesita el ordenador representar la información mediante códigos?",o:["Porque solo puede procesar información representada internamente mediante señales digitales.","Porque no puede guardar textos.","Porque todos los datos son fotografías."],a:0,e:"Los códigos permiten representar caracteres y otros datos de forma que el sistema digital pueda procesarlos."},
+{q:"¿Qué es la arquitectura de Von Neumann?",o:["Un lenguaje de programación.","Un modelo que organiza los principales bloques de un ordenador y su funcionamiento.","Un tipo de conexión Wi-Fi."],a:1,e:"El modelo describe bloques como la memoria, la unidad de control, la ALU y la entrada/salida."},
+{q:"¿Qué función tiene la unidad aritmético-lógica (ALU)?",o:["Mostrar imágenes en la pantalla.","Guardar permanentemente documentos.","Realizar operaciones aritméticas y lógicas."],a:2,e:"La ALU realiza cálculos y comparaciones lógicas."},
+{q:"¿Qué hace la unidad de control?",o:["Coordina y dirige la ejecución de las instrucciones.","Imprime los trabajos.","Guarda archivos cuando apagamos el equipo."],a:0,e:"La unidad de control interpreta instrucciones y coordina el funcionamiento de los demás bloques."},
+{q:"¿Qué idea importante caracteriza al modelo clásico de Von Neumann?",o:["Los programas solo pueden guardarse en una memoria USB.","Las instrucciones y los datos pueden almacenarse en la misma memoria.","El ordenador no necesita memoria."],a:1,e:"En el modelo de Von Neumann, datos e instrucciones comparten la memoria principal."}
+];
+const form=document.getElementById("quiz"),container=document.getElementById("questions"),progress=document.getElementById("progress"),results=document.getElementById("results");
+function render(){container.innerHTML="";questions.forEach((item,i)=>{const s=document.createElement("section");s.className="question";const n=document.createElement("div");n.className="number";n.textContent=`Pregunta ${i+1} de ${questions.length}`;const h=document.createElement("h2");h.textContent=item.q;s.append(n,h);item.o.forEach((opt,j)=>{const l=document.createElement("label");l.className="option";const inp=document.createElement("input");inp.type="radio";inp.name="q"+i;inp.value=j;inp.addEventListener("change",updateProgress);const t=document.createElement("span");t.textContent=opt;l.append(inp,t);s.append(l)});const f=document.createElement("div");f.className="feedback";f.id="f"+i;s.append(f);container.append(s)});updateProgress()}
+function updateProgress(){const n=questions.filter((_,i)=>form.querySelector(`input[name="q${i}"]:checked`)).length;progress.style.width=(n/questions.length*100)+"%"}
+form.addEventListener("submit",ev=>{ev.preventDefault();let score=0,empty=0;questions.forEach((item,i)=>{const chosen=form.querySelector(`input[name="q${i}"]:checked`),f=document.getElementById("f"+i);form.querySelectorAll(`input[name="q${i}"]`).forEach(x=>x.disabled=true);f.className="feedback show";if(!chosen){empty++;f.classList.add("bad");f.textContent="Sin responder. "+item.e}else if(+chosen.value===item.a){score++;f.classList.add("good");f.textContent="¡Correcto! "+item.e}else{f.classList.add("bad");f.textContent="Respuesta correcta: "+item.o[item.a]+". "+item.e}});const pct=Math.round(score/questions.length*100);document.getElementById("score").textContent=`${score} de ${questions.length} (${pct} %) `;const name=document.getElementById("student").value.trim();document.getElementById("message").textContent=(name?`¡Buen trabajo, ${name}! `:"")+(pct>=85?"¡Muy bien! Has comprendido los conceptos principales.":pct>=60?"Vas por buen camino. Revisa las explicaciones de las preguntas falladas.":"Repasa los apuntes y vuelve a intentarlo. ¡Puedes mejorar!");document.getElementById("review").textContent=empty?`Has dejado ${empty} pregunta(s) sin responder; cuentan como incorrectas.`:"Lee las explicaciones para reforzar lo aprendido.";document.getElementById("correct").disabled=true;results.style.display="block";results.scrollIntoView({behavior:"smooth"})});
+function reset(){form.reset();form.querySelectorAll("input").forEach(x=>x.disabled=false);questions.forEach((_,i)=>{const f=document.getElementById("f"+i);f.className="feedback";f.textContent=""});results.style.display="none";document.getElementById("correct").disabled=false;updateProgress();window.scrollTo({top:0,behavior:"smooth"})}
+document.getElementById("reset").addEventListener("click",reset);document.getElementById("retry").addEventListener("click",reset);render();
+</script>
+</body>
+</html>
